@@ -1,4 +1,12 @@
 
+/* @file :  main.c
+ * @author  Diego Tovío kleber.
+ * @version 1.0.0
+ * @date    28/01/2021
+ * @brief   Archivo principal
+ * @details
+*/
+
 /*******************************************************************************
  * Includes
  ******************************************************************************/
@@ -13,18 +21,32 @@
 #include "sdk_hal_gpio.h"
 #include "sdk_hal_uart0.h"
 #include "sdk_hal_i2c0.h"
+
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
-#define MMA851_I2C_DEVICE_ADDRESS	0x1D
-
+#define MMA8451_I2C_DEVICE_ADDRESS	        0x1D
 #define MMA8451_WHO_AM_I_MEMORY_ADDRESS		0x0D
+#define MMA8451_OUT_X_MSB                   0x01
+#define MMA8451_OUT_X_LSB                   0x02
+#define MMA8451_OUT_Y_MSB                   0X03
+#define MMA8451_OUT_Y_LSB                   0x04
+#define MMA8451_OUT_Z_MSB                   0x05
+#define MMA8451_OUT_Z_LSB                   0x06
 
+
+/*******************************************************************************
+ * Code
+ ******************************************************************************/
 
 int main(void) {
+
 	status_t status;
 	uint8_t nuevo_byte_uart;
 	uint8_t	nuevo_dato_i2c;
+	uint16_t nuevo_dato_i2c_parteMSB;
+    uint16_t nuevo_dato_i2c_parteLSB;
+    int16_t Variable_Final ;
 
   	/* Init board hardware. */
     BOARD_InitBootPins();
@@ -38,11 +60,14 @@ int main(void) {
     (void)uart0Inicializar(115200);	//115200bps
     (void)i2c0MasterInit(100000);	//100kbps
 
-    PRINTF("Usar teclado para controlar LEDs\r\n");
-    PRINTF("r-R led ROJO\r\n");
-    PRINTF("v-V led VERDE\r\n");
-    PRINTF("a-A led AZUL\r\n");
+    PRINTF("Usar teclado para controlar LEDs y obteneter informacion de cada uno de los ejes del acelerometro MMA8451\r\n");
+    PRINTF("r-R led ROJO(On/Off)\r\n");
+    PRINTF("v-V led VERDE(On/Off)\r\n");
+    PRINTF("a-A led AZUL(On/Off)\r\n");
     PRINTF("M buscar acelerometro\r\n");
+    PRINTF("X-x datos del eje X\r\n");
+    PRINTF("Y-y datos del eje Y\r\n");
+    PRINTF("Z-z datos del eje Z\r\n");
 
 
     while(1) {
@@ -73,27 +98,45 @@ int main(void) {
 					break;
 
 				case 'M':
-					i2c0MasterReadByte(&nuevo_dato_i2c, MMA851_I2C_DEVICE_ADDRESS, MMA8451_WHO_AM_I_MEMORY_ADDRESS);
+					i2c0MasterReadByte(&nuevo_dato_i2c, MMA8451_I2C_DEVICE_ADDRESS, MMA8451_WHO_AM_I_MEMORY_ADDRESS);
 
 					if(nuevo_dato_i2c==0x1A)
-						printf("MMA8451 encontrado!!\r\n");
+						printf("MMA8451 Encontrado!!\r\n");
 					else
-						printf("MMA8451 error\r\n");
+						printf("MMA8451 Error\r\n");
 
 					break;
 
 				case 'X':
 				case 'x':
+	    			i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_MSB);
+	    			i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_LSB);
+
+	    				Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
+
+	    				printf("El dato para el eje X de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
 
 					break;
 
 				case 'Y':
 				case 'y':
+                	 i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_MSB);
+		             i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_LSB);
+
+		                Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
+
+						printf("El dato para el eje Y de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
 
 					break;
 
 	     		case 'Z':
 				case 'z':
+               	     i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_MSB);
+		             i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_LSB);
+
+		                Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
+
+		                printf("El dato para el eje Z de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
 
 					break;
 
