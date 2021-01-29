@@ -6,7 +6,6 @@
  * @brief   Archivo principal
  * @details
 */
-
 /*******************************************************************************
  * Includes
  ******************************************************************************/
@@ -25,8 +24,15 @@
 /*******************************************************************************
  * Definitions
  ******************************************************************************/
+
 #define MMA8451_I2C_DEVICE_ADDRESS	        0x1D
 #define MMA8451_WHO_AM_I_MEMORY_ADDRESS		0x0D
+
+#define CTRL_REG1                         0x00
+#define XYZ_DATA_CFG                      0x01
+#define CTRL_REG1                         0x01
+
+// direcciones para leer los registros de los ejes del acelerometro
 #define MMA8451_OUT_X_MSB                   0x01
 #define MMA8451_OUT_X_LSB                   0x02
 #define MMA8451_OUT_Y_MSB                   0X03
@@ -44,9 +50,9 @@ int main(void) {
 	status_t status;
 	uint8_t nuevo_byte_uart;
 	uint8_t	nuevo_dato_i2c;
-	uint16_t nuevo_dato_i2c_parteMSB;
-    uint16_t nuevo_dato_i2c_parteLSB;
-    int16_t Variable_Final ;
+	uint16_t Registro_i2c0_MSB;    //variable para guardar la parte mas significativa
+    uint16_t Registro_i2c0_LSB;    //variable para guardar la parte menos significativa
+    int16_t Dato_Final ;           //variable para guardar la union de MSB y LSB
 
   	/* Init board hardware. */
     BOARD_InitBootPins();
@@ -59,6 +65,7 @@ int main(void) {
 
     (void)uart0Inicializar(115200);	//115200bps
     (void)i2c0MasterInit(100000);	//100kbps
+//    i2c0ConfigData();
 
     PRINTF("Usar teclado para controlar LEDs y obteneter informacion de cada uno de los ejes del acelerometro MMA8451\r\n");
     PRINTF("r-R led ROJO(On/Off)\r\n");
@@ -71,6 +78,9 @@ int main(void) {
 
 
     while(1) {
+
+
+
     	if(uart0CuantosDatosHayEnBuffer()>0){
     		status=uart0LeerByteDesdeBuffer(&nuevo_byte_uart);
     		if(status==kStatus_Success){
@@ -109,34 +119,36 @@ int main(void) {
 
 				case 'X':
 				case 'x':
-	    			i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_MSB);
-	    			i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_LSB);
+					i2c0ConfigData();
+	    			i2c0MasterReadByte(&Registro_i2c0_MSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_MSB);
+	    			i2c0MasterReadByte(&Registro_i2c0_LSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_LSB);
 
-	    				Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
+	    				Dato_Final=(Registro_i2c0_MSB<<8)|(Registro_i2c0_LSB);
 
-	    				printf("El dato para el eje X de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
+	    				printf("El dato para el eje X de la parte menos significativa y la mas significativa es: %d \r\n ", Dato_Final);
 
 					break;
 
 				case 'Y':
 				case 'y':
-                	 i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_MSB);
-		             i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_LSB);
+					i2c0ConfigData();
+                	i2c0MasterReadByte(&Registro_i2c0_MSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_MSB);
+		            i2c0MasterReadByte(&Registro_i2c0_LSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_LSB);
 
-		                Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
+		                Dato_Final=(Registro_i2c0_MSB<<8)|(Registro_i2c0_LSB);
 
-						printf("El dato para el eje Y de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
+						printf("El dato para el eje Y de la parte menos significativa y la mas significativa es: %d \r\n ", Dato_Final);
 
 					break;
 
 	     		case 'Z':
 				case 'z':
-               	     i2c0MasterReadByte(&nuevo_dato_i2c_parteMSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_MSB);
-		             i2c0MasterReadByte(&nuevo_dato_i2c_parteLSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_LSB);
+					i2c0ConfigData();
+					i2c0MasterReadByte(&Registro_i2c0_MSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_MSB);
+					i2c0MasterReadByte(&Registro_i2c0_LSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Z_LSB);
 
-		                Variable_Final=(nuevo_dato_i2c_parteMSB<<6)|(nuevo_dato_i2c_parteLSB>>2);
-
-		                printf("El dato para el eje Z de la parte menos significativa y la mas significativa es: %d \r\n ", Variable_Final);
+					Dato_Final=(Registro_i2c0_MSB<<8)|(Registro_i2c0_LSB);
+					printf("El dato para el eje Z de la parte menos significativa y la mas significativa es: %d \r\n ", Dato_Final);
 
 					break;
 
