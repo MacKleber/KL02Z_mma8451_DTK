@@ -124,7 +124,6 @@ int main(void) {
 	    			i2c0MasterReadByte(&Registro_i2c0_LSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_X_LSB);
 
 	    				Dato_Final=(Registro_i2c0_MSB<<8)|(Registro_i2c0_LSB);
-
 	    				printf("El dato para el eje X de la parte menos significativa y la mas significativa es: %d \r\n ", Dato_Final);
 
 					break;
@@ -136,7 +135,6 @@ int main(void) {
 		            i2c0MasterReadByte(&Registro_i2c0_LSB, MMA8451_I2C_DEVICE_ADDRESS,MMA8451_OUT_Y_LSB);
 
 		                Dato_Final=(Registro_i2c0_MSB<<8)|(Registro_i2c0_LSB);
-
 						printf("El dato para el eje Y de la parte menos significativa y la mas significativa es: %d \r\n ", Dato_Final);
 
 					break;
